@@ -19,10 +19,10 @@ if [ ! -e "${download_dir}/CSMSC" ]; then
     mkdir -p "${download_dir}"
     cd "${download_dir}"
     wget https://weixinxcxdb.oss-cn-beijing.aliyuncs.com/gwYinPinKu/BZNSYP.rar
-    mkdir CSMSC && cd CSMSC && unrar x ../BZNSYP.rar
+    mkdir CSMSC && cd CSMSC && /home/xintong/local/bin/unrar x ../BZNSYP.rar
     # convert new line code
     find ./PhoneLabeling -name "*.interval" | while read -r line; do
-        nkf -Lu --overwrite "${line}"
+        /home/xintong/local/bin/nkf -Lu --overwrite "${line}"
     done
     rm ../BZNSYP.rar
     cd "${cwd}"

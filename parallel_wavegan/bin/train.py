@@ -1493,14 +1493,15 @@ def main():
     }
     if args.distributed:
         # wrap model for distributed training
-        try:
-            from apex.parallel import DistributedDataParallel
-        except ImportError:
-            raise ImportError(
-                "apex is not installed. please check https://github.com/NVIDIA/apex."
-            )
-        model["generator"] = DistributedDataParallel(model["generator"])
-        model["discriminator"] = DistributedDataParallel(model["discriminator"])
+        # try:
+        #     from apex.parallel import DistributedDataParallel
+        # except ImportError:
+        #     raise ImportError(
+        #         "apex is not installed. please check https://github.com/NVIDIA/apex."
+        #     )
+        from torch.nn.parallel import DistributedDataParallel
+        model["generator"] = DistributedDataParallel(model["generator"],find_unused_parameters=True)
+        model["discriminator"] = DistributedDataParallel(model["discriminator"],find_unused_parameters=True)
 
     # show settings
     logging.info(model["generator"])

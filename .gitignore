@@ -30,6 +30,8 @@ egs/*/*/downloads
 egs/*/*/dump
 egs/*/*/exp
 egs/*/*/conf/tuning
+egs/*/*/*.log
+egs/*/*/nohup.out
 
 # tools related
 tools/venv/
