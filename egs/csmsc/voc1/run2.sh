@@ -14,7 +14,7 @@ n_gpus=2       # number of gpus in training
 n_jobs=16      # number of parallel jobs in feature extraction
 
 # NOTE(kan-bayashi): renamed to conf to avoid conflict in parse_options.sh
-conf=conf/parallel_wavegan.v1.16k.yaml
+conf=conf/parallel_wavegan.v1.16k.subband.yaml
 
 # directory path setting
 download_dir=/data2/xintong/parallel_wavegan_downloads # direcotry to save downloaded files
@@ -121,7 +121,7 @@ if [ "${stage}" -le 2 ] && [ "${stop_stage}" -ge 2 ]; then
     [ ! -e "${expdir}" ] && mkdir -p "${expdir}"
     cp "${dumpdir}/${train_set}/stats.${stats_ext}" "${expdir}"
     if [ "${n_gpus}" -gt 1 ]; then
-        train="python -m parallel_wavegan.distributed.launch --nproc_per_node ${n_gpus} -c parallel-wavegan-train"
+        train="CUDA_VISIBLE_DEVICES=2,3 python -m parallel_wavegan.distributed.launch --nproc_per_node ${n_gpus} --master_port 8000 -c parallel-wavegan-train"
     else
         train="parallel-wavegan-train"
     fi

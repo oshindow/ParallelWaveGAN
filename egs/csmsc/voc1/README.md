@@ -14,6 +14,12 @@ timbre 会变，
 谐波不清晰
 - [ ] finetuning this model? 5854/5954 data for finetuning
     16k以上的部分也是空白，
+    timbre 一致
+    卡顿减少了
+    噪音 (base model)
+    频谱被截断 (base model)
+- [ ] train from scratch?
 - [ ] 16k v.s. 24k
+
 - [ ] 1 speaker, timbre
 - [ ] training set stats v.s. fintuning set stats
