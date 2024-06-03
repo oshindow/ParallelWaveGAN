@@ -6,3 +6,4 @@ from .sine import *  # NOQA
 from .tade_res_block import *  # NOQA
 from .upsample import *  # NOQA
 from .vector_quantize_codebook import *  # NOQA
+from .multiband_istft import *

@@ -1,4 +1,4 @@
-git add .
+git add /home/xintong/ParallelWaveGAN
 
 git commit -m "multiband istft 16k basemodel Version 1.2"
 

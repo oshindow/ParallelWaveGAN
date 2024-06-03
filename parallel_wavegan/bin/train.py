@@ -32,6 +32,7 @@ from parallel_wavegan.datasets import (
     AudioSCPDataset,
 )
 from parallel_wavegan.layers import PQMF
+# from parallel_wavegan.layers import ISTFT
 from parallel_wavegan.losses import (
     DiscriminatorAdversarialLoss,
     DurationPredictorLoss,
@@ -221,14 +222,16 @@ class Trainer(object):
                 gen_loss += duration_loss
             else:
                 y_ = self.model["generator"](*x)
-
+                # print('generator output y_: (out_channels=4)', y_.shape)
             # reconstruct the signal from multi-band signal
             if self.config["generator_params"]["out_channels"] > 1:
                 y_mb_ = y_
                 y_ = self.criterion["pqmf"].synthesis(y_mb_)
-
+                # print('y_mb_ (y_) before pqmf, and y_ after pqmf:', y_mb_.shape, y_.shape)
+            
             # multi-resolution sfft loss
             if self.config["use_stft_loss"]:
+                # print("use_stft_loss: y_.shape, y.shape:", y_.shape, y.shape)
                 sc_loss, mag_loss = self.criterion["stft"](y_, y)
                 gen_loss += sc_loss + mag_loss
                 self.total_train_loss[
@@ -240,9 +243,11 @@ class Trainer(object):
 
             # subband multi-resolution stft loss
             if self.config["use_subband_stft_loss"]:
+                
                 gen_loss *= 0.5  # for balancing with subband stft loss
                 if not self.is_vq:
                     y_mb = self.criterion["pqmf"].analysis(y)
+                # print("use_subband_stft_loss: y_mb_.shape, y_mb.shape:", y_mb_.shape, y_mb.shape)
                 sub_sc_loss, sub_mag_loss = self.criterion["sub_stft"](y_mb_, y_mb)
                 gen_loss += 0.5 * (sub_sc_loss + sub_mag_loss)
                 self.total_train_loss[
@@ -263,8 +268,16 @@ class Trainer(object):
 
             # adversarial loss
             if self.steps > self.config["discriminator_train_start_steps"]:
-                p_ = self.model["discriminator"](y_)
-                adv_loss = self.criterion["gen_adv"](p_)
+                if self.config["discriminator_type"] == "MultibandParallelWaveGANDiscriminator":
+                    p_, p_low_, p_mid_, p_high_ = self.model["discriminator"](y_)
+                    adv_loss = self.criterion["gen_adv"](p_)
+                    adv_loss += self.criterion["gen_adv"](p_low_)
+                    adv_loss += self.criterion["gen_adv"](p_mid_)
+                    adv_loss += self.criterion["gen_adv"](p_high_)
+                else:    
+                    p_ = self.model["discriminator"](y_)
+                    adv_loss = self.criterion["gen_adv"](p_)
+
                 self.total_train_loss["train/adversarial_loss"] += adv_loss.item()
 
                 # feature matching loss
@@ -281,6 +294,8 @@ class Trainer(object):
                 # add adversarial loss to generator loss
                 gen_loss += self.config["lambda_adv"] * adv_loss
 
+                # istft
+                
             self.total_train_loss["train/generator_loss"] += gen_loss.item()
 
             # update generator
@@ -315,9 +330,21 @@ class Trainer(object):
                     y_ = self.criterion["pqmf"].synthesis(y_)
 
             # discriminator loss
-            p = self.model["discriminator"](y)
-            p_ = self.model["discriminator"](y_.detach())
-            real_loss, fake_loss = self.criterion["dis_adv"](p_, p)
+            if self.config["discriminator_type"] == "MultibandParallelWaveGANDiscriminator":
+                p_, p_low_, p_mid_, p_high_ = self.model["discriminator"](y_.detach())
+                p, p_low, p_mid, p_high = self.model["discriminator"](y)
+                real_loss, fake_loss = self.criterion["dis_adv"](p_, p)
+                real_loss_low, fake_loss_low = self.criterion["dis_adv"](p_low_, p_low)
+                real_loss_mid, fake_loss_mid = self.criterion["dis_adv"](p_mid_, p_mid)
+                real_loss_high, fake_loss_high = self.criterion["dis_adv"](p_high_, p_high)
+                real_loss += real_loss_low + real_loss_mid + real_loss_high
+                fake_loss += fake_loss_low + fake_loss_mid + fake_loss_high
+            
+            else:
+                p = self.model["discriminator"](y)
+                p_ = self.model["discriminator"](y_.detach())
+                real_loss, fake_loss = self.criterion["dis_adv"](p_, p)
+            
             dis_loss = real_loss + fake_loss
             self.total_train_loss["train/real_loss"] += real_loss.item()
             self.total_train_loss["train/fake_loss"] += fake_loss.item()
@@ -1379,7 +1406,12 @@ def main():
             **config["discriminator_params"],
         ).to(device),
     }
-
+    
+    generator_params = sum(p.numel() for p in model["generator"].parameters())
+    discriminator_params = sum(p.numel() for p in model["discriminator"].parameters())
+    logging.info("number of generator parameters:", generator_params)
+    logging.info("number of discriminator parameters:", discriminator_params)
+    
     # define criterions
     criterion = {
         "gen_adv": GeneratorAdversarialLoss(
@@ -1450,6 +1482,10 @@ def main():
             **config.get("pqmf_params", {}),
         ).to(device)
 
+    # if config["use_istft"]:
+    #     criterion["istft"] = ISTFT(
+    #         config["fft_size"], config["hop_size"], config["win_size"], device=device)
+        
     # define optimizers and schedulers
     generator_optimizer_class = getattr(
         parallel_wavegan.optimizers,
