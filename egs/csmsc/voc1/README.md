@@ -12,14 +12,34 @@ timbre 会变，
 卡顿，
 有很多伪谐波
 谐波不清晰
-- [ ] finetuning this model? 5854/5954 data for finetuning
+- [x] finetuning this model? 5854/5954 data for finetuning
     16k以上的部分也是空白，
     timbre 一致
     卡顿减少了
     噪音 (base model)
     频谱被截断 (base model)
 - [ ] train from scratch?
-- [ ] 16k v.s. 24k
+- [x] 16k v.s. 24k
 
 - [ ] 1 speaker, timbre
 - [ ] training set stats v.s. fintuning set stats
+
+2. 16k subband pqmf method
+(Steps: 22000) train/generator_loss = 1.2336.
+(Steps: 22000) eval/generator_loss = 5.4772. 很高 (正常)
+
+噪声大
+- [ ] batch size 32 vs batch size 6
+    batch size 32 收敛太慢
+    try batch size 6
+    batch size 和 generator 的structure 有关吗
+- [ ] istft reconstruct
+
+64	1000
+128	2000
+192	3000
+256	4000
+320	5000
+384	6000
+448	7000
+512	8000

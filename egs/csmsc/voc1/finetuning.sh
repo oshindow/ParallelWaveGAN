@@ -7,14 +7,14 @@
 . ./path.sh || exit 1;
 
 # basic settings
-stage=2      # stage to start
+stage=3     # stage to start
 stop_stage=100 # stage to stop
 verbose=1      # verbosity level (lower is less info)
 n_gpus=2       # number of gpus in training
 n_jobs=16      # number of parallel jobs in feature extraction
 
 # NOTE(kan-bayashi): renamed to conf to avoid conflict in parse_options.sh
-conf=conf/parallel_wavegan.v1.finetuning.yaml
+conf=conf/parallel_wavegan.v1.16k.finetuning.yaml
 
 # directory path setting
 download_dir=/data2/xintong/parallel_wavegan_downloads # direcotry to save downloaded files
@@ -29,22 +29,25 @@ resume=""  # checkpoint path to resume training
 checkpoint="" # checkpoint path to be used for decoding
               # if not provided, the latest one will be used
               # (e.g. <path>/<to>/checkpoint-400000steps.pkl)
-basemodel="/home/xintong/ParallelWaveGAN/egs/csmsc/voc1/exp/train_nodev_csmsc_parallel_wavegan.v1/checkpoint-400000steps.pkl"
+# basemodel="/home/xintong/ParallelWaveGAN/egs/csmsc/voc1/exp/train_nodev_csmsc_parallel_wavegan.v1/checkpoint-400000steps.pkl"
+basemodel="/home/xintong/ParallelWaveGAN/egs/csmsc/voc1/exp/train_nodev_16k_csmsc_parallel_wavegan.v1.16k/checkpoint-400000steps.pkl"
 # shellcheck disable=SC1091
 . utils/parse_options.sh || exit 1;
 
-finetuning_set="magichub_sg"
+finetuning_set="magichub_sg_16k"
 stats_set="train_nodev"
+
 train_set="$finetuning_set/train_nodev" # name of training data directory
 dev_set="$finetuning_set/dev"           # name of development data direcotry
 eval_set="$finetuning_set/eval"         # name of evaluation data direcotry
+
 db_dir="/data2/xintong/magichub_sg"
 set -euo pipefail
 
 if [ "${stage}" -le 0 ] && [ "${stop_stage}" -ge 0 ]; then
     echo "Stage 0: Data preparation"
     local/data_prep_magichub_sg.sh \
-        "${db_dir}" data/magichub_sg
+        "${db_dir}" data/magichub_sg_16k
 fi
 
 stats_ext=$(grep -q "hdf5" <(/home/xintong/local/bin/yq ".format" "${conf}") && echo "h5" || echo "npy")
