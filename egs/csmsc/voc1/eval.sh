@@ -14,28 +14,28 @@ n_gpus=2       # number of gpus in training
 n_jobs=16      # number of parallel jobs in feature extraction
 
 # NOTE(kan-bayashi): renamed to conf to avoid conflict in parse_options.sh
-conf=conf/parallel_wavegan.v1.yaml
-
+# conf=conf/parallel_wavegan.v1.yaml
+conf=conf/parallel_wavegan.v1.16k.multiband_disc_100k.yaml
 # directory path setting
 download_dir=/data2/xintong/parallel_wavegan_downloads # direcotry to save downloaded files
 dumpdir=/data2/xintong/parallel_wavegan_downloads/dump           # directory to dump features
 
 # training related setting
-tag="finetuning"     # tag for directory to save model
+tag=""     # tag for directory to save model
 resume=""  # checkpoint path to resume training
            # (e.g. <path>/<to>/checkpoint-10000steps.pkl)
 
 # decoding related setting
-checkpoint="/home/xintong/ParallelWaveGAN/egs/csmsc/voc1/exp/magichub_sg_csmsc_finetuning/checkpoint-20000steps.pkl" # checkpoint path to be used for decoding
+checkpoint="/home/xintong/ParallelWaveGAN/egs/csmsc/voc1/exp/train_nodev_16k_csmsc_disc_100k/checkpoint-370000steps.pkl" # checkpoint path to be used for decoding
               # if not provided, the latest one will be used
               # (e.g. <path>/<to>/checkpoint-400000steps.pkl)
-checkpoint=""
+# checkpoint=""
 # shellcheck disable=SC1091
 . utils/parse_options.sh || exit 1;
 
-train_set="train_nodev"
-finetuning_set="magichub_sg"
-eval_set="magichub_sg/dev"         # name of evaluation data direcotry
+train_set="train_nodev_16k"
+finetuning_set="magichub_sg_16k"
+eval_set="magichub_sg_16k/eval"         # name of evaluation data direcotry
 db_dir="/data2/xintong/magichub_sg"
 
 set -euo pipefail

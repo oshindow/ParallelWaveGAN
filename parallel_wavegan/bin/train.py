@@ -274,6 +274,13 @@ class Trainer(object):
                     adv_loss += self.criterion["gen_adv"](p_low_)
                     adv_loss += self.criterion["gen_adv"](p_mid_)
                     adv_loss += self.criterion["gen_adv"](p_high_)
+
+                elif self.config["discriminator_type"] == "LowbandParallelWaveGANDiscriminator":
+                    p_, p_low_ = self.model["discriminator"](y_)
+                    adv_loss = self.criterion["gen_adv"](p_)
+                    adv_loss_low = self.criterion["gen_adv"](p_low_)
+                    adv_loss += self.criterion["gen_adv"](p_low_)
+                    self.total_train_loss["train/adversarial_loss_low"] += adv_loss_low.item()                     
                 else:    
                     p_ = self.model["discriminator"](y_)
                     adv_loss = self.criterion["gen_adv"](p_)
@@ -284,12 +291,17 @@ class Trainer(object):
                 if self.config["use_feat_match_loss"]:
                     # no need to track gradients
                     with torch.no_grad():
-                        p = self.model["discriminator"](y)
+                        p_, p_low_ = self.model["discriminator"](y_)
+                        p, p_low = self.model["discriminator"](y)
                     fm_loss = self.criterion["feat_match"](p_, p)
+                    fm_loss_low = self.criterion["feat_match"](p_low_, p_low)
                     self.total_train_loss[
                         "train/feature_matching_loss"
-                    ] += fm_loss.item()
-                    adv_loss += self.config["lambda_feat_match"] * fm_loss
+                    ] += fm_loss
+                    self.total_train_loss[
+                        "train/feature_matching_loss_low"
+                    ] += fm_loss_low
+                    adv_loss += self.config["lambda_feat_match"] * fm_loss + self.config["lambda_feat_match_low"] * fm_loss_low
 
                 # add adversarial loss to generator loss
                 gen_loss += self.config["lambda_adv"] * adv_loss
@@ -339,7 +351,15 @@ class Trainer(object):
                 real_loss_high, fake_loss_high = self.criterion["dis_adv"](p_high_, p_high)
                 real_loss += real_loss_low + real_loss_mid + real_loss_high
                 fake_loss += fake_loss_low + fake_loss_mid + fake_loss_high
-            
+            elif self.config["discriminator_type"] == "LowbandParallelWaveGANDiscriminator":
+                p_, p_low_ = self.model["discriminator"](y_.detach())
+                p, p_low = self.model["discriminator"](y)
+                real_loss, fake_loss = self.criterion["dis_adv"](p_, p)
+                real_loss_low, fake_loss_low = self.criterion["dis_adv"](p_low_, p_low)
+                real_loss += real_loss_low  
+                fake_loss += fake_loss_low  
+                self.total_train_loss["train/real_loss_low"] += real_loss_low.item()
+                self.total_train_loss["train/fake_loss_low"] += fake_loss_low.item()
             else:
                 p = self.model["discriminator"](y)
                 p_ = self.model["discriminator"](y_.detach())
@@ -466,7 +486,7 @@ class Trainer(object):
         if self.config["use_feat_match_loss"]:
             p = self.model["discriminator"](y)
             fm_loss = self.criterion["feat_match"](p_, p)
-            self.total_eval_loss["eval/feature_matching_loss"] += fm_loss.item()
+            self.total_eval_loss["eval/feature_matching_loss"] += fm_loss
             gen_loss += (
                 self.config["lambda_adv"] * self.config["lambda_feat_match"] * fm_loss
             )

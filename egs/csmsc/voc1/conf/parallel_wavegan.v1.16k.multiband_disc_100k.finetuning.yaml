@@ -48,7 +48,7 @@ generator_params:
 ###########################################################
 #       DISCRIMINATOR NETWORK ARCHITECTURE SETTING        #
 ###########################################################
-discriminator_type: ParallelWaveGANDiscriminator
+discriminator_type: "MultibandParallelWaveGANDiscriminator" # Discriminator type.
 discriminator_params:
     in_channels: 1        # Number of input channels.
     out_channels: 1       # Number of output channels.

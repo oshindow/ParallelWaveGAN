@@ -37,16 +37,20 @@ class FeatureMatchLoss(torch.nn.Module):
             Tensor: Feature matching loss value.
 
         """
+        # print(feats_hat.shape, feats.shape)
         feat_match_loss = 0.0
         for i, (feats_hat_, feats_) in enumerate(zip(feats_hat, feats)):
+            # print("i", i, feats_hat_.shape, feats_.shape)
             feat_match_loss_ = 0.0
             if not self.include_final_outputs:
                 feats_hat_ = feats_hat_[:-1]
                 feats_ = feats_[:-1]
             for j, (feat_hat_, feat_) in enumerate(zip(feats_hat_, feats_)):
+                # print("j", j, feats_hat_.shape, feats_.shape)
                 feat_match_loss_ += F.l1_loss(feat_hat_, feat_.detach())
             if self.average_by_layers:
                 feat_match_loss_ /= j + 1
+            # print(feat_match_loss_)
             feat_match_loss += feat_match_loss_
         if self.average_by_discriminators:
             feat_match_loss /= i + 1

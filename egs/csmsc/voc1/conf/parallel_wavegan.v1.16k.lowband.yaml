@@ -48,7 +48,7 @@ generator_params:
 ###########################################################
 #       DISCRIMINATOR NETWORK ARCHITECTURE SETTING        #
 ###########################################################
-discriminator_type: ParallelWaveGANDiscriminator
+discriminator_type: "LowbandParallelWaveGANDiscriminator" # Discriminator type.
 discriminator_params:
     in_channels: 1        # Number of input channels.
     out_channels: 1       # Number of output channels.
@@ -111,8 +111,8 @@ discriminator_grad_norm: 1 # Discriminator's gradient norm.
 ###########################################################
 #                    INTERVAL SETTING                     #
 ###########################################################
-discriminator_train_start_steps: 0 # Number of steps to start to train discriminator.
-train_max_steps: 50000                 # Number of training steps.
+discriminator_train_start_steps: 100000 # Number of steps to start to train discriminator.
+train_max_steps: 400000                 # Number of training steps.
 save_interval_steps: 5000               # Interval steps to save checkpoint.
 eval_interval_steps: 1000               # Interval steps to evaluate the network.
 log_interval_steps: 100                 # Interval steps to record the training log.

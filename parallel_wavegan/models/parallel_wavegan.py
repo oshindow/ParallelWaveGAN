@@ -243,6 +243,7 @@ class ParallelWaveGANGenerator(torch.nn.Module):
             Tensor: Output tensor (T, out_channels)
 
         """
+        print('call inference in ParallelWaveGenerator')
         if x is not None:
             if not isinstance(x, torch.Tensor):
                 x = torch.tensor(x, dtype=torch.float).to(
@@ -477,6 +478,87 @@ class MultibandParallelWaveGANDiscriminator(torch.nn.Module):
 
         self.apply(_remove_weight_norm)
 
+class LowbandParallelWaveGANDiscriminator(torch.nn.Module):
+    """Parallel WaveGAN Discriminator module."""
+
+    def __init__(
+        self,
+        in_channels=1,
+        out_channels=1,
+        kernel_size=3,
+        layers=10,
+        conv_channels=64,
+        dilation_factor=1,
+        nonlinear_activation="LeakyReLU",
+        nonlinear_activation_params={"negative_slope": 0.2},
+        bias=True,
+        use_weight_norm=True,
+    ):
+        """Initialize Parallel WaveGAN Discriminator module.
+
+        Args:
+            in_channels (int): Number of input channels.
+            out_channels (int): Number of output channels.
+            kernel_size (int): Number of output channels.
+            layers (int): Number of conv layers.
+            conv_channels (int): Number of chnn layers.
+            dilation_factor (int): Dilation factor. For example, if dilation_factor = 2,
+                the dilation will be 2, 4, 8, ..., and so on.
+            nonlinear_activation (str): Nonlinear function after each conv.
+            nonlinear_activation_params (dict): Nonlinear function parameters
+            bias (bool): Whether to use bias parameter in conv.
+            use_weight_norm (bool) Whether to use weight norm.
+                If set to true, it will be applied to all of the conv layers.
+
+        """
+        super(LowbandParallelWaveGANDiscriminator, self).__init__()
+        assert (kernel_size - 1) % 2 == 0, "Not support even number kernel size."
+        assert dilation_factor > 0, "Dilation factor must be > 0."
+        self.conv_layers = ParallelWaveGANDiscriminator().conv_layers
+        self.conv_layers_low = ParallelWaveGANDiscriminator().conv_layers
+        
+    def forward(self, x):
+        """Calculate forward propagation.
+
+        Args:
+            x (Tensor): Input noise signal (B, 1, T).
+
+        Returns:
+            Tensor: Output tensor (B, 1, T)
+
+        """
+        x_stft = DFT(device=x.device).stft(x.squeeze(1))
+        x_stft_low = torch.nn.functional.pad(x_stft[:,:129,:], pad=(0,0,0,0,0,513-129))
+        x_low = DFT(device=x_stft.device).istft(x_stft_low).unsqueeze(1)
+
+        for f in self.conv_layers:
+            x = f(x)
+        for f in self.conv_layers_low:
+            x_low = f(x_low)
+
+        return x, x_low
+
+    def apply_weight_norm(self):
+        """Apply weight normalization module from all of the layers."""
+
+        def _apply_weight_norm(m):
+            if isinstance(m, torch.nn.Conv1d) or isinstance(m, torch.nn.Conv2d):
+                torch.nn.utils.weight_norm(m)
+                logging.debug(f"Weight norm is applied to {m}.")
+
+        self.apply(_apply_weight_norm)
+
+    def remove_weight_norm(self):
+        """Remove weight normalization module from all of the layers."""
+
+        def _remove_weight_norm(m):
+            try:
+                logging.debug(f"Weight norm is removed from {m}.")
+                torch.nn.utils.remove_weight_norm(m)
+            except ValueError:  # this module didn't have weight norm
+                return
+
+        self.apply(_remove_weight_norm)
 
 class ResidualParallelWaveGANDiscriminator(torch.nn.Module):
     """Parallel WaveGAN Discriminator module."""

@@ -1,8 +1,11 @@
+version=1.4
+message="try causal and test feature"
+
 git add /home/xintong/ParallelWaveGAN
 
-git commit -m "multiband istft 16k basemodel Version 1.3"
+git commit -m "$message Version $version"
 
-git tag -a v1.3 -m "verison 1.3 of the model"
+git tag -a v$version -m "verison $version of the model"
 
-git push origin v1.3
+git push origin v$version
 git push origin master

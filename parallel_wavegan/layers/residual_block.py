@@ -116,6 +116,7 @@ class WaveNetResidualBlock(torch.nn.Module):
         x = self.conv(x)
 
         # remove future time steps if use_causal_conv conv
+        # print('if using causal_conv', self.use_causal_conv)
         x = x[:, :, : residual.size(-1)] if self.use_causal_conv else x
 
         # split into two part for gated activation

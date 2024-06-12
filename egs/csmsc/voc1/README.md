@@ -18,6 +18,7 @@ timbre 会变，
     卡顿减少了
     噪音 (base model)
     频谱被截断 (base model)
+    finetuning 的stats是 24k的，重新finetuning
 - [ ] train from scratch?
 - [x] 16k v.s. 24k
 
@@ -34,6 +35,7 @@ timbre 会变，
     try batch size 6
     batch size 和 generator 的structure 有关吗
 - [ ] istft reconstruct
+    basemodel 效果提升不明显，finetuning 呢
 
 64	1000
 128	2000

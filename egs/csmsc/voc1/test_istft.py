@@ -85,7 +85,10 @@ class DFT(torch.nn.Module):
         y_g = torch.istft(stft_spec, self.n_fft, hop_length=self.hop_size, win_length=self.win_size, window=self.window, center=True)
         return y_g
 
-wavefile = '/home/xintong/ParallelWaveGAN/egs/csmsc/voc1/exp/train_nodev_16k_csmsc_parallel_wavegan.v1.16k.subband/predictions/19000steps/1_ref.wav'
+# wavefile = '/home/xintong/ParallelWaveGAN/egs/csmsc/voc1/exp/train_nodev_16k_csmsc_parallel_wavegan.v1.16k.subband/predictions/19000steps/1_ref.wav'
+wavefile = '/home/xintong/ParallelWaveGAN/egs/csmsc/voc1/exp/train_nodev_16k_csmsc_disc_100k/wav/checkpoint-400000steps/eval_16k/csmsc_009901_gen.wav'
+wavefile = '/home/xintong/ParallelWaveGAN/egs/csmsc/voc1/exp/train_nodev_16k_csmsc_parallel_wavegan.v1.16k/wav/checkpoint-400000steps/eval_16k/csmsc_009901_gen.wav'
+wavefile = '/data2/xintong/parallel_wavegan_downloads/CSMSC/Wave/009901.wav'
 import librosa
 import torch
 y, sr = librosa.load(wavefile, sr=16000) # y: max:0.52, min: -0.4, (34928,)
@@ -95,7 +98,7 @@ print(wave.shape)
 x_stft = DFT(device=None).stft(wave.squeeze(1))
 print("x_stft:", x_stft.shape)
 
-x_stft = torch.rand(6, 513, 100, 2)
+# x_stft = torch.rand(6, 513, 100, 2)
 x_stft_low = torch.nn.functional.pad(x_stft[:,:129,:], pad=(0,0,0,0,0,513-129))
 print(x_stft_low, x_stft_low.shape)
 x_low = DFT(device=None).istft(x_stft_low)
@@ -111,7 +114,7 @@ x_high = DFT(device=None).istft(x_stft_high)
 import soundfile as sf
 print(x_low.shape)
 # sf.write('y_.wav', x_low, 24000)
-sf.write('y0.wav', x_low[0], 16000)
-sf.write('y1.wav', x_mid[0], 16000)
-sf.write('y2.wav', x_high[0], 16000)
+sf.write('y0_ref.wav', x_low[0], 16000)
+sf.write('y1_ref.wav', x_mid[0], 16000)
+sf.write('y2_ref.wav', x_high[0], 16000)
 # sf.write('y3.wav', subband[0,3], 16000)

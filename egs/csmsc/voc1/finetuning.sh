@@ -7,21 +7,21 @@
 . ./path.sh || exit 1;
 
 # basic settings
-stage=3     # stage to start
+stage=2     # stage to start
 stop_stage=100 # stage to stop
 verbose=1      # verbosity level (lower is less info)
 n_gpus=2       # number of gpus in training
 n_jobs=16      # number of parallel jobs in feature extraction
 
 # NOTE(kan-bayashi): renamed to conf to avoid conflict in parse_options.sh
-conf=conf/parallel_wavegan.v1.16k.finetuning.yaml
+conf=conf/parallel_wavegan.v1.16k.multiband_disc_100k.finetuning.yaml
 
 # directory path setting
 download_dir=/data2/xintong/parallel_wavegan_downloads # direcotry to save downloaded files
 dumpdir=/data2/xintong/parallel_wavegan_downloads/dump           # directory to dump features
 
 # training related setting
-tag="finetuning"     # tag for directory to save model
+tag="disc_100k_finetuning"     # tag for directory to save model
 resume=""  # checkpoint path to resume training
            # (e.g. <path>/<to>/checkpoint-10000steps.pkl)
 
@@ -30,12 +30,12 @@ checkpoint="" # checkpoint path to be used for decoding
               # if not provided, the latest one will be used
               # (e.g. <path>/<to>/checkpoint-400000steps.pkl)
 # basemodel="/home/xintong/ParallelWaveGAN/egs/csmsc/voc1/exp/train_nodev_csmsc_parallel_wavegan.v1/checkpoint-400000steps.pkl"
-basemodel="/home/xintong/ParallelWaveGAN/egs/csmsc/voc1/exp/train_nodev_16k_csmsc_parallel_wavegan.v1.16k/checkpoint-400000steps.pkl"
+basemodel="/home/xintong/ParallelWaveGAN/egs/csmsc/voc1/exp/train_nodev_16k_csmsc_disc_100k/checkpoint-400000steps.pkl"
 # shellcheck disable=SC1091
 . utils/parse_options.sh || exit 1;
 
 finetuning_set="magichub_sg_16k"
-stats_set="train_nodev"
+stats_set="train_nodev_16k"
 
 train_set="$finetuning_set/train_nodev" # name of training data directory
 dev_set="$finetuning_set/dev"           # name of development data direcotry

@@ -14,7 +14,7 @@ n_gpus=2       # number of gpus in training
 n_jobs=16      # number of parallel jobs in feature extraction
 
 # NOTE(kan-bayashi): renamed to conf to avoid conflict in parse_options.sh
-conf=conf/parallel_wavegan.v1.16k.multiband.yaml
+conf=conf/parallel_wavegan.v1.16k.causal.yaml
 
 # directory path setting
 download_dir=/data2/xintong/parallel_wavegan_downloads # direcotry to save downloaded files
@@ -26,10 +26,10 @@ resume=""  # checkpoint path to resume training
            # (e.g. <path>/<to>/checkpoint-10000steps.pkl)
 
 # decoding related setting
-checkpoint="" # checkpoint path to be used for decoding
+# checkpoint="/home/xintong/ParallelWaveGAN/egs/csmsc/voc1/exp/train_nodev_16k_csmsc_parallel_wavegan.v1.16k.lowband/checkpoint-390000steps.pkl" # checkpoint path to be used for decoding
               # if not provided, the latest one will be used
               # (e.g. <path>/<to>/checkpoint-400000steps.pkl)
-
+checkpoint=""
 # shellcheck disable=SC1091
 . utils/parse_options.sh || exit 1;
 
