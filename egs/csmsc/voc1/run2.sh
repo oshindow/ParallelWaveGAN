@@ -8,13 +8,13 @@
 
 # basic settings
 stage=3      # stage to start, 2: train
-stop_stage=100 # stage to stop
+stop_stage=3 # stage to stop
 verbose=1      # verbosity level (lower is less info)
 n_gpus=2       # number of gpus in training
 n_jobs=16      # number of parallel jobs in feature extraction
 
 # NOTE(kan-bayashi): renamed to conf to avoid conflict in parse_options.sh
-conf=conf/parallel_wavegan.v1.16k.lowband.feat.yaml
+conf=conf/parallel_wavegan.v1.16k.combine.yaml
 
 # directory path setting
 download_dir=/data2/xintong/parallel_wavegan_downloads # direcotry to save downloaded files
@@ -26,32 +26,23 @@ resume=""  # checkpoint path to resume training
            # (e.g. <path>/<to>/checkpoint-10000steps.pkl)
 
 # decoding related setting
-checkpoint="/home/xintong/ParallelWaveGAN/egs/csmsc/voc1/exp/train_nodev_16k_csmsc_parallel_wavegan.v1.16k.lowband.feat/checkpoint-110000steps.pkl" # checkpoint path to be used for decoding
+# checkpoint="/home/xintong/ParallelWaveGAN/egs/csmsc/voc1/exp/train_nodev_16k_csmsc_parallel_wavegan.v1.16k.lowband/checkpoint-390000steps.pkl" # checkpoint path to be used for decoding
               # if not provided, the latest one will be used
               # (e.g. <path>/<to>/checkpoint-400000steps.pkl)
-
+checkpoint=""
 # shellcheck disable=SC1091
 . utils/parse_options.sh || exit 1;
 
-train_set="train_nodev_16k" # name of training data directory
-dev_set="dev_16k"           # name of development data direcotry
-eval_set="eval_16k"         # name of evaluation data direcotry
-
+train_set="combined" # name of training data directory
+dev_set="eval_16k"           # name of development data direcotry
+eval_set="aishell3_16k/eval"         # name of evaluation data direcotry
+db_dir="/data2/xintong/aishell3"
 set -euo pipefail
-
-if [ "${stage}" -le -1 ] && [ "${stop_stage}" -ge -1 ]; then
-    echo "Stage -1: Data download"
-    local/data_download.sh "${download_dir}"
-fi
 
 if [ "${stage}" -le 0 ] && [ "${stop_stage}" -ge 0 ]; then
     echo "Stage 0: Data preparation"
-    local/data_prep.sh \
-        --fs 16000 \
-        --train_set "${train_set}" \
-        --dev_set "${dev_set}" \
-        --eval_set "${eval_set}" \
-        "${download_dir}/CSMSC" data
+    local/data_prep_aishell3.sh \
+        "${db_dir}" data/aishell3_16k
 fi
 
 stats_ext=$(grep -q "hdf5" <(/home/xintong/local/bin/yq ".format" "${conf}") && echo "h5" || echo "npy")
@@ -59,7 +50,7 @@ if [ "${stage}" -le 1 ] && [ "${stop_stage}" -ge 1 ]; then
     echo "Stage 1: Feature extraction"
     # extract raw features
     pids=()
-    for name in "${train_set}" "${dev_set}" "${eval_set}"; do
+    for name in "${eval_set}"; do
     (
         [ ! -e "${dumpdir}/${name}/raw" ] && mkdir -p "${dumpdir}/${name}/raw"
         echo "Feature extraction start. See the progress via ${dumpdir}/${name}/raw/preprocessing.*.log."
@@ -68,7 +59,6 @@ if [ "${stage}" -le 1 ] && [ "${stop_stage}" -ge 1 ]; then
             parallel-wavegan-preprocess \
                 --config "${conf}" \
                 --scp "${dumpdir}/${name}/raw/wav.JOB.scp" \
-                --segments "${dumpdir}/${name}/raw/segments.JOB" \
                 --dumpdir "${dumpdir}/${name}/raw/dump.JOB" \
                 --verbose "${verbose}"
         echo "Successfully finished feature extraction of ${name} set."
@@ -79,36 +69,36 @@ if [ "${stage}" -le 1 ] && [ "${stop_stage}" -ge 1 ]; then
     [ "${i}" -gt 0 ] && echo "$0: ${i} background jobs are failed." && exit 1;
     echo "Successfully finished feature extraction."
 
-    # calculate statistics for normalization
-    echo "Statistics computation start. See the progress via ${dumpdir}/${train_set}/compute_statistics.log."
-    ${train_cmd} "${dumpdir}/${train_set}/compute_statistics.log" \
-        parallel-wavegan-compute-statistics \
-            --config "${conf}" \
-            --rootdir "${dumpdir}/${train_set}/raw" \
-            --dumpdir "${dumpdir}/${train_set}" \
-            --verbose "${verbose}"
-    echo "Successfully finished calculation of statistics."
+    # # calculate statistics for normalization
+    # echo "Statistics computation start. See the progress via ${dumpdir}/${train_set}/compute_statistics.log."
+    # ${train_cmd} "${dumpdir}/${train_set}/compute_statistics.log" \
+    #     parallel-wavegan-compute-statistics \
+    #         --config "${conf}" \
+    #         --rootdir "${dumpdir}/${train_set}/raw" \
+    #         --dumpdir "${dumpdir}/${train_set}" \
+    #         --verbose "${verbose}"
+    # echo "Successfully finished calculation of statistics."
 
-    # normalize and dump them
-    pids=()
-    for name in "${train_set}" "${dev_set}" "${eval_set}"; do
-    (
-        [ ! -e "${dumpdir}/${name}/norm" ] && mkdir -p "${dumpdir}/${name}/norm"
-        echo "Nomalization start. See the progress via ${dumpdir}/${name}/norm/normalize.*.log."
-        ${train_cmd} JOB=1:${n_jobs} "${dumpdir}/${name}/norm/normalize.JOB.log" \
-            parallel-wavegan-normalize \
-                --config "${conf}" \
-                --stats "${dumpdir}/${train_set}/stats.${stats_ext}" \
-                --rootdir "${dumpdir}/${name}/raw/dump.JOB" \
-                --dumpdir "${dumpdir}/${name}/norm/dump.JOB" \
-                --verbose "${verbose}"
-        echo "Successfully finished normalization of ${name} set."
-    ) &
-    pids+=($!)
-    done
-    i=0; for pid in "${pids[@]}"; do wait "${pid}" || ((++i)); done
-    [ "${i}" -gt 0 ] && echo "$0: ${i} background jobs are failed." && exit 1;
-    echo "Successfully finished normalization."
+    # # normalize and dump them
+    # pids=()
+    # for name in "${train_set}" "${dev_set}" "${eval_set}"; do
+    # (
+    #     [ ! -e "${dumpdir}/${name}/norm" ] && mkdir -p "${dumpdir}/${name}/norm"
+    #     echo "Nomalization start. See the progress via ${dumpdir}/${name}/norm/normalize.*.log."
+    #     ${train_cmd} JOB=1:${n_jobs} "${dumpdir}/${name}/norm/normalize.JOB.log" \
+    #         parallel-wavegan-normalize \
+    #             --config "${conf}" \
+    #             --stats "${dumpdir}/${train_set}/stats.${stats_ext}" \
+    #             --rootdir "${dumpdir}/${name}/raw/dump.JOB" \
+    #             --dumpdir "${dumpdir}/${name}/norm/dump.JOB" \
+    #             --verbose "${verbose}"
+    #     echo "Successfully finished normalization of ${name} set."
+    # ) &
+    # pids+=($!)
+    # done
+    # i=0; for pid in "${pids[@]}"; do wait "${pid}" || ((++i)); done
+    # [ "${i}" -gt 0 ] && echo "$0: ${i} background jobs are failed." && exit 1;
+    # echo "Successfully finished normalization."
 fi
 
 if [ -z "${tag}" ]; then
@@ -119,9 +109,9 @@ fi
 if [ "${stage}" -le 2 ] && [ "${stop_stage}" -ge 2 ]; then
     echo "Stage 2: Network training"
     [ ! -e "${expdir}" ] && mkdir -p "${expdir}"
-    cp "${dumpdir}/${train_set}/stats.${stats_ext}" "${expdir}"
+    # cp "${dumpdir}/${train_set}/stats.${stats_ext}" "${expdir}"
     if [ "${n_gpus}" -gt 1 ]; then
-        train="CUDA_VISIBLE_DEVICES=2,3 python -m parallel_wavegan.distributed.launch --nproc_per_node ${n_gpus} --master_port 8002 -c parallel-wavegan-train"
+        train="CUDA_VISIBLE_DEVICES=0,1 python -m parallel_wavegan.distributed.launch --nproc_per_node ${n_gpus} --master_port 8002 -c parallel-wavegan-train"
     else
         train="parallel-wavegan-train"
     fi
@@ -129,8 +119,8 @@ if [ "${stage}" -le 2 ] && [ "${stop_stage}" -ge 2 ]; then
     ${cuda_cmd} --gpu "${n_gpus}" "${expdir}/train.log" \
         ${train} \
             --config "${conf}" \
-            --train-dumpdir "${dumpdir}/${train_set}/norm" \
-            --dev-dumpdir "${dumpdir}/${dev_set}/norm" \
+            --train-dumpdir "${dumpdir}/${train_set}/raw" \
+            --dev-dumpdir "${dumpdir}/${eval_set}/raw" \
             --outdir "${expdir}" \
             --resume "${resume}" \
             --verbose "${verbose}"
@@ -139,18 +129,19 @@ fi
 
 if [ "${stage}" -le 3 ] && [ "${stop_stage}" -ge 3 ]; then
     echo "Stage 3: Network decoding"
+    echo $expdir
     # shellcheck disable=SC2012
     [ -z "${checkpoint}" ] && checkpoint="$(ls -dt "${expdir}"/*.pkl | head -1 || true)"
     outdir="${expdir}/wav/$(basename "${checkpoint}" .pkl)"
     pids=()
-    for name in "${dev_set}" "${eval_set}"; do
+    for name in "${dev_set}"; do
     (
         [ ! -e "${outdir}/${name}" ] && mkdir -p "${outdir}/${name}"
         [ "${n_gpus}" -gt 1 ] && n_gpus=1
         echo "Decoding start. See the progress via ${outdir}/${name}/decode.log."
         ${cuda_cmd} --gpu "${n_gpus}" "${outdir}/${name}/decode.log" \
             parallel-wavegan-decode \
-                --dumpdir "${dumpdir}/${name}/norm" \
+                --dumpdir "${dumpdir}/${name}/raw" \
                 --checkpoint "${checkpoint}" \
                 --outdir "${outdir}/${name}" \
                 --verbose "${verbose}"

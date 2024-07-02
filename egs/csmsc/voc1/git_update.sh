@@ -1,5 +1,5 @@
-version=1.4
-message="try causal and test feature"
+version=1.5
+message="train aishell3 and all model"
 
 git add /home/xintong/ParallelWaveGAN
 

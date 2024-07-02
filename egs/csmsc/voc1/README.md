@@ -45,3 +45,7 @@ timbre 会变，
 384	6000
 448	7000
 512	8000
+
+prepare aishell-3 data
+
+SSB18370413.wav 请 qing3 求 qiu2 依 yi1 法 fa3 撤 che4 销 xiao1 中 zhong1 卫 wei4 市 shi4 中 zhong1 级 ji2 人 ren2 民 min2 法 fa3 院 yuan4 的 de5 民 min2 事 shi4 裁 cai2 定 ding4 书 shu1

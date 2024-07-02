@@ -76,5 +76,5 @@ def write_hdf5(hdf5_name, hdf5_path, write_data, is_overwrite=True):
     hdf5_file.flush()
     hdf5_file.close()
 
-hdf5_data = read_hdf5(hdf5_name='dump/eval_16k/raw/dump.1/csmsc_009901.h5', hdf5_path='feats')
+hdf5_data = read_hdf5(hdf5_name='dump/eval_16k/raw/dump.1/csmsc_009901.h5', hdf5_path='wave')
 print('.')
