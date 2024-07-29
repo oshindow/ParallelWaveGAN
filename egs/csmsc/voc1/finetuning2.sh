@@ -21,7 +21,7 @@ download_dir=/data2/xintong/parallel_wavegan_downloads # direcotry to save downl
 dumpdir=/data2/xintong/parallel_wavegan_downloads/dump           # directory to dump features
 
 # training related setting
-tag="stats16k_finetuning"     # tag for directory to save model
+tag="aishell3_base_finetuning"     # tag for directory to save model
 resume=""  # checkpoint path to resume training
            # (e.g. <path>/<to>/checkpoint-10000steps.pkl)
 
@@ -30,7 +30,7 @@ checkpoint="" # checkpoint path to be used for decoding
               # if not provided, the latest one will be used
               # (e.g. <path>/<to>/checkpoint-400000steps.pkl)
 # basemodel="/home/xintong/ParallelWaveGAN/egs/csmsc/voc1/exp/train_nodev_csmsc_parallel_wavegan.v1/checkpoint-400000steps.pkl"
-basemodel="/home/xintong/ParallelWaveGAN/egs/csmsc/voc1/exp/train_nodev_16k_csmsc_parallel_wavegan.v1.16k/checkpoint-400000steps.pkl"
+basemodel="/home/xintong/ParallelWaveGAN/egs/csmsc/voc1/exp/aishell3_16k/train_nodev_csmsc_parallel_wavegan.v1.16k.aishell3/checkpoint-400000steps.pkl"
 # shellcheck disable=SC1091
 . utils/parse_options.sh || exit 1;
 
@@ -116,7 +116,7 @@ if [ "${stage}" -le 2 ] && [ "${stop_stage}" -ge 2 ]; then
     [ ! -e "${expdir}" ] && mkdir -p "${expdir}"
     cp "${dumpdir}/${stats_set}/stats.${stats_ext}" "${expdir}"
     if [ "${n_gpus}" -gt 1 ]; then
-        train="CUDA_VISIBLE_DEVICES=2,3 python -m parallel_wavegan.distributed.launch --nproc_per_node ${n_gpus} --master_port 8003 -c parallel-wavegan-train"
+        train="CUDA_VISIBLE_DEVICES=0,1 python -m parallel_wavegan.distributed.launch --nproc_per_node ${n_gpus} --master_port 8004 -c parallel-wavegan-train"
     else
         train="parallel-wavegan-train"
     fi
@@ -124,8 +124,8 @@ if [ "${stage}" -le 2 ] && [ "${stop_stage}" -ge 2 ]; then
     ${cuda_cmd} --gpu "${n_gpus}" "${expdir}/train.log" \
         ${train} \
             --config "${conf}" \
-            --train-dumpdir "${dumpdir}/${train_set}/norm" \
-            --dev-dumpdir "${dumpdir}/${dev_set}/norm" \
+            --train-dumpdir "${dumpdir}/${train_set}/raw" \
+            --dev-dumpdir "${dumpdir}/${dev_set}/raw" \
             --outdir "${expdir}" \
             --resume "${resume}" \
             --verbose "${verbose}" \
@@ -146,7 +146,7 @@ if [ "${stage}" -le 3 ] && [ "${stop_stage}" -ge 3 ]; then
         echo "Decoding start. See the progress via ${outdir}/${name}/decode.log."
         ${cuda_cmd} --gpu "${n_gpus}" "${outdir}/${name}/decode.log" \
             parallel-wavegan-decode \
-                --dumpdir "${dumpdir}/${name}/norm" \
+                --dumpdir "${dumpdir}/${name}/raw" \
                 --checkpoint "${checkpoint}" \
                 --outdir "${outdir}/${name}" \
                 --verbose "${verbose}"

@@ -7,15 +7,15 @@
 . ./path.sh || exit 1;
 
 # basic settings
-stage=1      # stage to start
+stage=3      # stage to start
 stop_stage=100 # stage to stop
 verbose=1      # verbosity level (lower is less info)
 n_gpus=2       # number of gpus in training
 n_jobs=1      # number of parallel jobs in feature extraction
 
 # NOTE(kan-bayashi): renamed to conf to avoid conflict in parse_options.sh
-conf=conf/parallel_wavegan.v1.16k.finetuning.yaml
-# conf=conf/parallel_wavegan.v1.16k.yaml
+conf=conf/parallel_wavegan.v1.16k.aishell3.yaml
+# conf=conf/parallel_wavegan.v1.yaml
 # directory path setting
 download_dir=/data2/xintong/parallel_wavegan_downloads # direcotry to save downloaded files
 dumpdir=/data2/xintong/parallel_wavegan_downloads/dump           # directory to dump features
@@ -26,16 +26,18 @@ resume=""  # checkpoint path to resume training
            # (e.g. <path>/<to>/checkpoint-10000steps.pkl)
 
 # decoding related setting
-checkpoint="/home/xintong/ParallelWaveGAN/egs/csmsc/voc1/exp/magichub_sg_16k_csmsc_stats16k_finetuning/checkpoint-50000steps.pkl" # checkpoint path to be used for decoding
+# checkpoint="/home/xintong/ParallelWaveGAN/egs/csmsc/voc1/exp/magichub_sg_16k_csmsc_stats16k_finetuning/checkpoint-50000steps.pkl" # checkpoint path to be used for decoding
               # if not provided, the latest one will be used
               # (e.g. <path>/<to>/checkpoint-400000steps.pkl)
-# checkpoint="/home/xintong/ParallelWaveGAN/egs/csmsc/voc1/exp/train_nodev_16k_csmsc_parallel_wavegan.v1.16k/checkpoint-400000steps.pkl"
+checkpoint="/home/xintong/ParallelWaveGAN/egs/csmsc/voc1/exp/aishell3_16k/train_nodev_csmsc_parallel_wavegan.v1.16k.aishell3/checkpoint-400000steps.pkl"
+# checkpoint="exp/train_nodev_csmsc_parallel_wavegan.v1/checkpoint-400000steps.pkl"
 # shellcheck disable=SC1091
 . utils/parse_options.sh || exit 1;
 
 train_set="train_nodev_16k"
 finetuning_set="magichub_sg_16k"
-eval_set="magichub_sg_16k_gen/eval/gen_grad_100_acc_blk_grl"         # name of evaluation data direcotry
+eval_set="magichub_sg_16k_gen/eval/gen_grad_220_libritts"         # name of evaluation data direcotry
+eval_set="magichub_sg_16k_gen/eval/pretrained_libritts"
 db_dir="/data2/xintong/magichub_sg"
 
 set -euo pipefail
@@ -90,7 +92,7 @@ if [ "${stage}" -le 3 ] && [ "${stop_stage}" -ge 3 ]; then
         echo "Decoding start. See the progress via ${outdir}/${name}/decode.log."
         ${cuda_cmd} --gpu "${n_gpus}" "${outdir}/${name}/decode.log" \
             parallel-wavegan-decode \
-                --dumpdir "${dumpdir}/${name}/norm" \
+                --dumpdir "${dumpdir}/${name}/raw" \
                 --checkpoint "${checkpoint}" \
                 --outdir "${outdir}/${name}" \
                 --verbose "${verbose}"

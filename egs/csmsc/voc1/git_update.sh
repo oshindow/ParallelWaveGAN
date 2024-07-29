@@ -1,5 +1,5 @@
-version=1.5
-message="train aishell3 and all model"
+version=1.6
+message="20240729"
 
 git add /home/xintong/ParallelWaveGAN
 
