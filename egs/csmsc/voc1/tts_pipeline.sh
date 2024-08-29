@@ -14,8 +14,8 @@ n_gpus=2       # number of gpus in training
 n_jobs=1      # number of parallel jobs in feature extraction
 
 # NOTE(kan-bayashi): renamed to conf to avoid conflict in parse_options.sh
-conf=conf/parallel_wavegan.v1.16k.aishell3.yaml
-# conf=conf/parallel_wavegan.v1.yaml
+# conf=conf/parallel_wavegan.v1.16k.aishell3.yaml
+conf=conf/parallel_wavegan.v1.16k.finetuning.yaml
 # directory path setting
 download_dir=/data2/xintong/parallel_wavegan_downloads # direcotry to save downloaded files
 dumpdir=/data2/xintong/parallel_wavegan_downloads/dump           # directory to dump features
@@ -29,15 +29,15 @@ resume=""  # checkpoint path to resume training
 # checkpoint="/home/xintong/ParallelWaveGAN/egs/csmsc/voc1/exp/magichub_sg_16k_csmsc_stats16k_finetuning/checkpoint-50000steps.pkl" # checkpoint path to be used for decoding
               # if not provided, the latest one will be used
               # (e.g. <path>/<to>/checkpoint-400000steps.pkl)
-checkpoint="/home/xintong/ParallelWaveGAN/egs/csmsc/voc1/exp/aishell3_16k/train_nodev_csmsc_parallel_wavegan.v1.16k.aishell3/checkpoint-400000steps.pkl"
-# checkpoint="exp/train_nodev_csmsc_parallel_wavegan.v1/checkpoint-400000steps.pkl"
+# checkpoint="/home/xintong/ParallelWaveGAN/egs/csmsc/voc1/exp/aishell3_16k/train_nodev_csmsc_parallel_wavegan.v1.16k.aishell3/checkpoint-400000steps.pkl"
+checkpoint="/home/xintong/ParallelWaveGAN/egs/csmsc/voc1/exp/magichub_sg_16k_csmsc_aishell3_base_finetuning/checkpoint-50000steps.pkl"
 # shellcheck disable=SC1091
 . utils/parse_options.sh || exit 1;
 
 train_set="train_nodev_16k"
 finetuning_set="magichub_sg_16k"
-eval_set="magichub_sg_16k_gen/eval/gen_grad_220_libritts"         # name of evaluation data direcotry
-eval_set="magichub_sg_16k_gen/eval/pretrained_libritts"
+eval_set="magichub_sg_16k_gen/eval/gen_grad_400_E8"        # name of evaluation data direcotry
+# eval_set="magichub_sg_16k_gen/eval/pretrained_libritts"
 db_dir="/data2/xintong/magichub_sg"
 
 set -euo pipefail

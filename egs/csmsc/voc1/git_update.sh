@@ -1,5 +1,5 @@
-version=1.6
-message="20240729"
+version=1.7
+message="20240829"
 
 git add /home/xintong/ParallelWaveGAN
 
