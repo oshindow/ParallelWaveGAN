@@ -1,0 +1,110 @@
+
+input = '''
+ULTI_USDT
+BABYDOGE_USDT
+LFT_USDT
+drift_usdt
+fish_usdt
+xzero_usdt
+KMNO_USDT
+MEW_USDT
+GOG_USDT
+SAFE_USDT
+LL_USDT
+MERL_USDT
+LL_USDT
+ZBCN_USDT
+LBR_USDT
+DMAIL_USDT
+GOAL_USDT
+DOSE_USDT
+LITH_USDT
+TNSR_USDT
+ZEUS_USDT
+ZENT_USDT
+ZEND_USDT
+GF_USDT
+BEPRO_USDT
+W_USDT
+BRWL_USDT
+GPT_USDT
+SLN_USDT
+PRCL_USDT
+ZETA_USDT
+FAR_USDT
+RON_USDT
+SILLY_USDT
+BIIS_USDT
+EFIL_USDT
+VELODROME_USDT
+PYTH_USDT
+SATS_USDT
+LEO_USDT
+MNT_USDT
+ORBS_USDT
+BIGTIME_USDT
+RSS3_USDT
+XAUT_USDT
+EURT_USDT
+VELA_USDT
+TON_USDT
+METIS_USDT
+BAND_USDT
+SWEAT_USDT
+SOLO_USDT
+AIDOGE_USDT
+OMG_USDT
+BOB_USDT
+POKT_USDT
+ERTHA_USDT
+CETUS_USDT
+AKITA_USDT
+RACA_USDT
+BONE_USDT
+VRA_USDT
+SWFTC_USDT
+TURBO_USDT
+FLR_USDT
+CORE_USDT
+VSYS_USDT
+OKB_USDT
+CRO_USDT
+ELON_USDT
+BZZ_USDT
+LOOKS_USDT
+BSV_USDT
+ETHW_USDT
+DAI_USDT
+WAVES_USDT
+XCH_USDT
+CQT_USDT
+CSPR_USDT
+MYRIA_USDT
+CTC_USDT
+GFT_USDT
+PRQ_USDT
+SAMO_USDT
+'''
+
+out = input.split('\n')
+out_ = []
+print(len(out))
+for it in out[1:-1]:
+    if it.split('_')[1] == 'USDT' or it.split('_')[1] == 'usdt':
+        out_.append(it.split('_')[0])
+
+    # if it.split('_')[1] != 'USDT':
+    #     out_.append(it.split('_')[0])
+
+print(len(out_))
+print(",".join(out_))
+
+import torch
+h_enc = torch.rand(3, 1, 5)
+h_dec = torch.rand(1, 2, 5)
+
+print(h_enc)
+print(h_dec)
+a = h_enc + h_dec 
+print(a)
+a = a
